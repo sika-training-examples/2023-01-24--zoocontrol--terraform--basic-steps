@@ -56,6 +56,8 @@ locals {
   }
 
   gitlab_enabled = true
+  # gitlab_state   = "stopped"
+  gitlab_state = "running"
 }
 
 resource "random_string" "suffix" {
@@ -108,6 +110,13 @@ EOF
   tags = {
     Name = "gitlab-${local.suffix}"
   }
+}
+
+resource "aws_ec2_instance_state" "gitlab" {
+  count = length(aws_instance.gitlab) == 1 ? 1 : 0
+
+  instance_id = aws_instance.gitlab[0].id
+  state       = local.gitlab_state
 }
 
 output "gitlab_ip" {
