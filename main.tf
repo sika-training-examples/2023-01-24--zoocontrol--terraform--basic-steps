@@ -75,7 +75,7 @@ resource "cloudflare_record" "example" {
   name    = aws_instance.example.tags.Name
   type    = "A"
   value   = aws_instance.example.public_ip
-  proxied = true
+  proxied = false
 }
 
 output "ip" {
