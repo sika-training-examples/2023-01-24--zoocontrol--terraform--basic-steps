@@ -98,3 +98,14 @@ output "password" {
   value     = sensitive(nonsensitive(random_password.password.result))
   sensitive = true
 }
+
+output "list" {
+  value = [0, 1, 2]
+}
+
+output "map" {
+  value = {
+    foo = 1
+    bar = 2
+  }
+}
