@@ -38,11 +38,22 @@ locals {
     DEBIAN_11 = "ami-0c75b861029de4030"
   }
   SIZE = {
-    SMALL = "t3.nano"
+    NANO  = "t3.nano"
+    MICRO = "t3.micro"
   }
   suffix = random_string.suffix.result
 
-  vm_count = 2
+  default_vm = {
+    ami           = local.IMAGE.DEBIAN_11
+    instance_type = local.SIZE.NANO
+  }
+
+  vms = {
+    foo = merge(local.default_vm, {})
+    bar = merge(local.default_vm, {
+      instance_type = local.SIZE.MICRO
+    })
+  }
 }
 
 resource "random_string" "suffix" {
@@ -63,43 +74,51 @@ resource "aws_key_pair" "default" {
 }
 
 resource "aws_instance" "example" {
-  count = local.vm_count
+  for_each = local.vms
 
-  ami           = local.IMAGE.DEBIAN_11
-  instance_type = local.SIZE.SMALL
+  ami           = each.value.ami
+  instance_type = each.value.instance_type
   key_name      = aws_key_pair.default.key_name
 
   tags = {
-    Name = "example-${count.index}-${local.suffix}"
+    Name = "example-${each.key}-${local.suffix}"
   }
 }
 
 resource "cloudflare_record" "example" {
-  count = local.vm_count
+  for_each = local.vms
 
   zone_id = local.sikademo_zone_id
-  name    = aws_instance.example[count.index].tags.Name
+  name    = aws_instance.example[each.key].tags.Name
   type    = "A"
-  value   = aws_instance.example[count.index].public_ip
+  value   = aws_instance.example[each.key].public_ip
   proxied = false
 }
 
-output "ip" {
-  value = aws_instance.example.*.public_ip
+output "ip_list" {
+  value = [
+    for instance in aws_instance.example : instance.public_ip
+  ]
 }
 
-output "domain" {
-  value = cloudflare_record.example.*.hostname
+output "domain_list" {
+  value = [
+    for record in cloudflare_record.example : record.hostname
+  ]
 }
 
-data "aws_instance" "example" {
-  count = local.vm_count
-
-  instance_id = aws_instance.example[count.index].id
+output "ip_map" {
+  value = {
+    for instance in aws_instance.example :
+    instance.tags.Name => instance.public_ip
+  }
 }
 
-output "ip_ds" {
-  value = data.aws_instance.example.*.public_ip
+output "domain_map" {
+  value = {
+    for record in cloudflare_record.example :
+    record.hostname => record.hostname
+  }
 }
 
 output "password" {
