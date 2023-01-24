@@ -56,6 +56,14 @@ locals {
     })
   }
 
+  vms2 = {
+    hello = merge(local.default_vm, {})
+    doggo = merge(local.default_vm, {
+      instance_type = local.SIZE.MICRO
+    })
+    kitty = merge(local.default_vm, {})
+  }
+
   gitlab_enabled = true
   # gitlab_state   = "stopped"
   gitlab_state = "running"
@@ -186,4 +194,21 @@ output "map" {
     foo = 1
     bar = 2
   }
+}
+
+module "ec2--vms2" {
+  source   = "./modules/ec2"
+  for_each = local.vms2
+
+  zone_id       = local.sikademo_zone_id
+  name          = each.key
+  ami           = each.value.ami
+  instance_type = each.value.instance_type
+  key_name      = aws_key_pair.default.key_name
+}
+
+output "ec2--vms2--ips" {
+  value = [
+    for m in module.ec2--vms2 : m.ip
+  ]
 }
