@@ -25,6 +25,13 @@ provider "aws" {
   secret_key = var.aws_secret_key
 }
 
+provider "aws" {
+  alias      = "west"
+  region     = "eu-west-1"
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
+}
+
 variable "cloudflare_api_token" {}
 
 provider "cloudflare" {
@@ -197,6 +204,9 @@ output "map" {
 }
 
 module "ec2--vms2" {
+  # providers = {
+  #   aws = aws.west
+  # }
   source   = "./modules/ec2"
   for_each = local.vms2
 
