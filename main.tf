@@ -41,6 +41,8 @@ locals {
     SMALL = "t3.nano"
   }
   suffix = random_string.suffix.result
+
+  vm_count = 2
 }
 
 resource "random_string" "suffix" {
@@ -61,37 +63,43 @@ resource "aws_key_pair" "default" {
 }
 
 resource "aws_instance" "example" {
+  count = local.vm_count
+
   ami           = local.IMAGE.DEBIAN_11
   instance_type = local.SIZE.SMALL
   key_name      = aws_key_pair.default.key_name
 
   tags = {
-    Name = "example-${local.suffix}"
+    Name = "example-${count.index}-${local.suffix}"
   }
 }
 
 resource "cloudflare_record" "example" {
+  count = local.vm_count
+
   zone_id = local.sikademo_zone_id
-  name    = aws_instance.example.tags.Name
+  name    = aws_instance.example[count.index].tags.Name
   type    = "A"
-  value   = aws_instance.example.public_ip
+  value   = aws_instance.example[count.index].public_ip
   proxied = false
 }
 
 output "ip" {
-  value = aws_instance.example.public_ip
+  value = aws_instance.example.*.public_ip
 }
 
 output "domain" {
-  value = cloudflare_record.example.hostname
+  value = cloudflare_record.example.*.hostname
 }
 
 data "aws_instance" "example" {
-  instance_id = aws_instance.example.id
+  count = local.vm_count
+
+  instance_id = aws_instance.example[count.index].id
 }
 
 output "ip_ds" {
-  value = data.aws_instance.example.public_ip
+  value = data.aws_instance.example.*.public_ip
 }
 
 output "password" {
