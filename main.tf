@@ -222,3 +222,12 @@ output "ec2--vms2--ips" {
     for m in module.ec2--vms2 : m.ip
   ]
 }
+
+module "ec2--xxx" {
+  source  = "gitlab.sikalabs.com/examples/ec2/aws"
+  version = "0.1.0"
+
+  zone_id  = local.sikademo_zone_id
+  name     = "xxx"
+  key_name = aws_key_pair.default.key_name
+}
