@@ -78,10 +78,33 @@ resource "aws_key_pair" "default" {
 resource "aws_instance" "gitlab" {
   count = local.gitlab_enabled ? 1 : 0
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
+  # delete_on_termination = false
   ami           = local.IMAGE.DEBIAN_11
   instance_type = local.SIZE.MICRO
   key_name      = aws_key_pair.default.key_name
-
+  user_data     = <<EOF
+#cloud-config
+ssh_pwauth: yes
+password: asdfasdf2020
+chpasswd:
+  expire: false
+write_files:
+- path: /html/index.html
+  permissions: "0755"
+  owner: root:root
+  content: |
+    <h1>Hello from Fake Gitlab</h1>
+runcmd:
+  - |
+    apt update
+    apt install -y curl sudo git nginx
+    curl -fsSL https://ins.oxs.cz/slu-linux-amd64.sh | sudo sh
+    cp /html/index.html /var/www/html/index.html
+EOF
   tags = {
     Name = "gitlab-${local.suffix}"
   }
