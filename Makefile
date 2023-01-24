@@ -12,3 +12,7 @@ terraform-providers-lock:
 		-platform=linux_amd64
 	git add .terraform.lock.hcl
 	git commit -m "deps: Update .terraform.lock.hcl" .terraform.lock.hcl
+
+setup-git-hooks:
+	rm -rf .git/hooks
+	(cd .git && ln -s ../.git-hooks hooks)
