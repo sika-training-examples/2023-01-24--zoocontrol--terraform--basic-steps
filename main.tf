@@ -223,6 +223,13 @@ output "ec2--vms2--ips" {
   ]
 }
 
+# Required config in ~/.terraformrc
+#
+#     credentials "gitlab.sikalabs.com" {
+#       token = "glpat-byzcysidCkT-uk9iDobS"
+#     }
+#
+
 module "ec2--xxx" {
   source  = "gitlab.sikalabs.com/examples/ec2/aws"
   version = "0.1.0"
