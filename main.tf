@@ -54,6 +54,8 @@ locals {
       instance_type = local.SIZE.MICRO
     })
   }
+
+  gitlab_enabled = true
 }
 
 resource "random_string" "suffix" {
@@ -71,6 +73,22 @@ resource "random_password" "password" {
 resource "aws_key_pair" "default" {
   key_name   = "ondrejsika-${local.suffix}"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCslNKgLyoOrGDerz9pA4a4Mc+EquVzX52AkJZz+ecFCYZ4XQjcg2BK1P9xYfWzzl33fHow6pV/C6QC3Fgjw7txUeH7iQ5FjRVIlxiltfYJH4RvvtXcjqjk8uVDhEcw7bINVKVIS856Qn9jPwnHIhJtRJe9emE7YsJRmNSOtggYk/MaV2Ayx+9mcYnA/9SBy45FPHjMlxntoOkKqBThWE7Tjym44UNf44G8fd+kmNYzGw9T5IKpH1E1wMR+32QJBobX6d7k39jJe8lgHdsUYMbeJOFPKgbWlnx9VbkZh+seMSjhroTgniHjUl8wBFgw0YnhJ/90MgJJL4BToxu9PVnH"
+}
+
+resource "aws_instance" "gitlab" {
+  count = local.gitlab_enabled ? 1 : 0
+
+  ami           = local.IMAGE.DEBIAN_11
+  instance_type = local.SIZE.MICRO
+  key_name      = aws_key_pair.default.key_name
+
+  tags = {
+    Name = "gitlab-${local.suffix}"
+  }
+}
+
+output "gitlab_ip" {
+  value = length(aws_instance.gitlab) == 1 ? aws_instance.gitlab[0].public_ip : null
 }
 
 resource "aws_instance" "example" {
