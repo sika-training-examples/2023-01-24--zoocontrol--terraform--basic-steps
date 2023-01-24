@@ -1,3 +1,9 @@
+terraform-fmt:
+	terraform fmt -recursive
+
+terraform-fmt-check:
+	terraform fmt -recursive -check
+
 terraform-providers-lock:
 	terraform providers lock \
 		-platform=darwin_arm64 \
