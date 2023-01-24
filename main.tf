@@ -33,6 +33,7 @@ provider "cloudflare" {
 provider "random" {}
 
 locals {
+  sikademo_zone_id = "f2c00168a7ecd694bb1ba017b332c019"
   IMAGE = {
     DEBIAN_11 = "ami-0c75b861029de4030"
   }
@@ -63,8 +64,20 @@ resource "aws_instance" "example" {
   }
 }
 
+resource "cloudflare_record" "example" {
+  zone_id = local.sikademo_zone_id
+  name    = aws_instance.example.tags.Name
+  type    = "A"
+  value   = aws_instance.example.public_ip
+  proxied = true
+}
+
 output "ip" {
   value = aws_instance.example.public_ip
+}
+
+output "domain" {
+  value = cloudflare_record.example.hostname
 }
 
 data "aws_instance" "example" {
