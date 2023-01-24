@@ -31,3 +31,46 @@ provider "cloudflare" {
 }
 
 provider "random" {}
+
+locals {
+  IMAGE = {
+    DEBIAN_11 = "ami-0c75b861029de4030"
+  }
+  SIZE = {
+    SMALL = "t3.nano"
+  }
+  suffix = random_string.suffix.result
+}
+
+resource "random_string" "suffix" {
+  length  = 4
+  special = false
+  upper   = false
+}
+
+resource "aws_key_pair" "default" {
+  key_name   = "ondrejsika-${local.suffix}"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCslNKgLyoOrGDerz9pA4a4Mc+EquVzX52AkJZz+ecFCYZ4XQjcg2BK1P9xYfWzzl33fHow6pV/C6QC3Fgjw7txUeH7iQ5FjRVIlxiltfYJH4RvvtXcjqjk8uVDhEcw7bINVKVIS856Qn9jPwnHIhJtRJe9emE7YsJRmNSOtggYk/MaV2Ayx+9mcYnA/9SBy45FPHjMlxntoOkKqBThWE7Tjym44UNf44G8fd+kmNYzGw9T5IKpH1E1wMR+32QJBobX6d7k39jJe8lgHdsUYMbeJOFPKgbWlnx9VbkZh+seMSjhroTgniHjUl8wBFgw0YnhJ/90MgJJL4BToxu9PVnH"
+}
+
+resource "aws_instance" "example" {
+  ami           = local.IMAGE.DEBIAN_11
+  instance_type = local.SIZE.SMALL
+  key_name      = aws_key_pair.default.key_name
+
+  tags = {
+    Name = "example-${local.suffix}"
+  }
+}
+
+output "ip" {
+  value = aws_instance.example.public_ip
+}
+
+data "aws_instance" "example" {
+  instance_id = aws_instance.example.id
+}
+
+output "ip_ds" {
+  value = data.aws_instance.example.public_ip
+}
